@@ -71,33 +71,98 @@ This project provides actionable business insights into digital payment performa
 <summary>Click to view sample SQL queries</summary>
 
 ```sql
--- 1. Total Transactions and Revenue Summary
+-- 1. How many transactions were recorded?
 SELECT 
-    COUNT(transaction_id) AS Total_Transactions,
-    SUM(transaction_amount) AS Total_Value,
-    COUNT(DISTINCT user_id) AS Unique_Users,
-    ROUND((SUM(CASE WHEN status = 'Success' THEN 1 ELSE 0 END) * 100.0 / COUNT(*)), 2) AS Success_Rate
-FROM phonepe_transactions;
+    COUNT(Transaction_ID) AS Total_Transactions
+FROM All_Transactions;
 
--- 2. Age Segment Revenue Contribution
+
+-- 2. What is the total transaction value?
 SELECT 
-    age_group,
-    SUM(transaction_amount) AS Total_Amount,
-    ROUND((SUM(transaction_amount) * 100.0 / (SELECT SUM(transaction_amount) FROM phonepe_transactions)), 2) AS Value_Percentage
-FROM phonepe_transactions
-GROUP BY age_group
-ORDER BY Total_Amount DESC;
+    SUM(Amount) AS Total_Transaction_Value
+FROM All_Transactions;
 
--- 3. Weekday vs Weekend Usage
+
+-- 3. How many distinct users transacted in the selected period?
+SELECT 
+    COUNT(DISTINCT User_ID) AS Unique_Users
+FROM All_Transactions;
+
+
+-- 4. What percentage of transactions succeeded?
+SELECT 
+    ROUND(
+        (SUM(CASE WHEN Payment_Status = 'Success' THEN 1 ELSE 0 END) * 100.0) / COUNT(*), 
+        2
+    ) AS Success_Rate_Percentage
+FROM All_Transactions;
+
+
+-- 5. How are transaction count and value changing over time?
+SELECT 
+    d.Month,
+    d.Month_No,
+    COUNT(t.Transaction_ID) AS Total_Transactions,
+    SUM(t.Amount) AS Total_Transaction_Value
+FROM All_Transactions t
+JOIN Date_Table d ON t.Date = d.Date
+GROUP BY d.Month, d.Month_No
+ORDER BY d.Month_No;
+
+
+-- 6. Which service categories contribute the most value?
+SELECT 
+    Service,
+    SUM(Amount) AS Total_Value,
+    COUNT(Transaction_ID) AS Total_Transactions
+FROM All_Transactions
+GROUP BY Service
+ORDER BY Total_Value DESC;
+
+
+-- 7. How does activity differ between weekdays and weekends?
 SELECT 
     CASE 
-        WHEN DAYOFWEEK(transaction_date) IN (1, 7) THEN 'Weekend'
+        WHEN DATENAME(WEEKDAY, t.Date) IN ('Saturday', 'Sunday') THEN 'Weekend'
         ELSE 'Weekday'
     END AS Day_Type,
-    COUNT(transaction_id) AS Transaction_Count,
-    SUM(transaction_amount) AS Total_Value
-FROM phonepe_transactions
-GROUP BY Day_Type;
+    COUNT(t.Transaction_ID) AS Total_Transactions,
+    SUM(t.Amount) AS Total_Transaction_Value
+FROM All_Transactions t
+GROUP BY 
+    CASE 
+        WHEN DATENAME(WEEKDAY, t.Date) IN ('Saturday', 'Sunday') THEN 'Weekend'
+        ELSE 'Weekday'
+    END;
+
+
+-- 8. How did transaction count and value change from the previous month? (MoM%)
+WITH Monthly_Summary AS (
+    SELECT 
+        d.Month_No,
+        d.Month,
+        COUNT(t.Transaction_ID) AS Current_Month_Transactions,
+        SUM(t.Amount) AS Current_Month_Value
+    FROM All_Transactions t
+    JOIN Date_Table d ON t.Date = d.Date
+    GROUP BY d.Month_No, d.Month
+)
+SELECT 
+    Month,
+    Current_Month_Transactions,
+    LAG(Current_Month_Transactions, 1) OVER (ORDER BY Month_No) AS Previous_Month_Transactions,
+    ROUND(
+        ((Current_Month_Transactions - LAG(Current_Month_Transactions, 1) OVER (ORDER BY Month_No)) * 100.0) 
+        / NULLIF(LAG(Current_Month_Transactions, 1) OVER (ORDER BY Month_No), 0), 2
+    ) AS Trans_MoM_Percentage,
+    Current_Month_Value,
+    LAG(Current_Month_Value, 1) OVER (ORDER BY Month_No) AS Previous_Month_Value,
+    ROUND(
+        ((Current_Month_Value - LAG(Current_Month_Value, 1) OVER (ORDER BY Month_No)) * 100.0) 
+        / NULLIF(LAG(Current_Month_Value, 1) OVER (ORDER BY Month_No), 0), 2
+    ) AS Value_MoM_Percentage
+FROM Monthly_Summary
+ORDER BY Month_No;
 ```
 
 </details>
