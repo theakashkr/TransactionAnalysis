@@ -1,4 +1,4 @@
-# PhonePe Pulse - Payment Insights & Analytics Dashboard 🚀
+# PhonePe - Payment Insights & Analytics Dashboard 🚀
 
 An end-to-end data analytics project featuring interactive **Power BI** dashboards and **SQL Queries** to analyze transaction patterns, customer demographics, usage behaviors, and service-wise performance for PhonePe.
 
@@ -6,7 +6,7 @@ An end-to-end data analytics project featuring interactive **Power BI** dashboar
 
 ## 📸 Dashboard Preview
 
-![PhonePe Power BI Dashboard](Dashboard.jpg)
+![PhonePe Power BI Dashboard](Dashboard.png)
 
 ---
 
@@ -111,11 +111,3 @@ GROUP BY Day_Type;
 * **Excel / CSV** (Data Cleaning & Preparation)
 
 ---
-
-## 🤝 Let's Connect!
-
-If you find this project insightful or have feedback, feel free to reach out or connect on LinkedIn!
-
-* **GitHub:** [@your-username](https://github.com/your-username)
-* **LinkedIn:** [Your Name](https://linkedin.com/in/your-profile)
-* **Email:** your.email@example.com
